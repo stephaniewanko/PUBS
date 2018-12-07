@@ -1,0 +1,128 @@
+
+
+##################################################################################################################
+
+					FITNESS CALCULATION PROTOCOL
+
+				Authors: Elissa Fink, Stephanie Wankowicz, 
+	 				 Christina Stephens, and Laura Gunsalus
+	 				 (all authors contributed equally) 
+
+				Date: October 22, 2018
+
+				Organization: PUBS :)
+
+##################################################################################################################
+
+
+_____________________________________________________________________
+
+INCLUDED LIBRARY AND PROCESSED CONTROL DATA:
+_____________________________________________________________________
+
+Updated dictionary: barcode_to_variant_dict_cutoff_2.pkl
+Procesed Control Data: 
+	(1) Barcode Fitness Replicate 1:
+	(2) Variant Fitness Replicate 1:
+	(3) Barcode Fitness Replicate 2: 
+	(4) Variant Fitness Replicate 2:
+
+
+______________________________________________________________________
+
+(1) PRE-PROCESS FASTQ FILES
+______________________________________________________________________
+
+INPUT: full paths to a FASTQ file, barcode dictionary in pickle format. [Note: Python 2.7 necessary for Biopython]
+
+	python2.7 step1.py -f <raw_fastq_file.fastq> -b <barcode_dict.csv>
+
+[!] To convert fastq file to count csv without recovering missing counts, run the following: 
+	
+	python2.7 step1_alternative.py -f <raw_fastq_file.fastq>
+
+OUTPUT: 
+	csv file containing recovered barcodes in the format "fastq_filename_recovered.csv". Prints 
+	percent of reads missing from original dictionary and reads recovered.
+
+
+______________________________________________________________________
+
+(2) SELECT A WILDTYPE BARCODE AS A REFERENCE
+______________________________________________________________________
+
+INPUT: preprocessed barcode count csv files from step1 (same folder), barcode-to-variant library
+
+        python3 step2.py -c <_recovered_t0.csv> <_recovered_t12.csv> <_recovered_t24.csv> -b <barcode_to_variant.pkl>
+
+[!] if you only have two time points run 'step2_only2_timepoints.py' instead [!]
+
+OUTPUT: 
+	reference barcode and its raw counts for t0, t12, and t24
+
+______________________________________________________________________
+
+(3) PRE- PROCESSING OF CSV/CALCULATE UNIQUE BARCODE FITNESS VALUES
+______________________________________________________________________
+
+INPUT: CSVs from 'PRE-PROCESSING FASTQ FILES' for every timepoint, WT represented barcode, output name
+
+	python3 -W ignore step3.py <raw_barcode_count_t0.csv> <raw_barcode_count_t12.csv> <raw_barcode_count_t24.csv> 'WT_Barcode_Seq' <output_name>
+
+[!] if you only have two time points run 'step3_only2_timepoints.py' instead [!]
+
+OUTPUT: 
+	Prints number of dropout barcodes, outputs one CSV with Barcode, count, Variant, 
+	Variant_Fitness to be fed into the collapse barcode fitness
+
+______________________________________________________________________
+
+(4) COLLAPSE BARCODE FITNESS VALUES TO SINGLE VARIANTS
+______________________________________________________________________
+
+INPUT: CSV from 'PRE-PROCESSING OF CSV' (step 3).
+
+	python3 step4.py <input.csv>
+
+OUTPUT: 
+
+	(1) Most important: CSV with Variant, Fitness, Standard Deviation. Output CSV will be named 
+	    'collapsed_fitness_' + name of input file. Variant Fitness is defined by the average of 
+	    all barcode fitness for that variant, not weighted average.
+
+	(2) Additional output: CSV with Barcode, fitness, variant, R^2, Standard Error, variant position,
+	    variant residue. This is not needed, just provided in case you want to see individual barcode 
+	    fitnesses. The additional CSV will be named 'intermediate_csv_barcode_fitness_' + name of input 
+	    CSV file.
+
+______________________________________________________________________
+
+(5) COMPARE TREATED AND CONTROL VARIANT FITNESS VALUES
+______________________________________________________________________
+
+INPUT: Treated and untreated CSV to compare from step 4.
+
+       python3 -t <untreated_fitness.csv> -u <treated_fitness.csv> -n <"experiment name">
+
+OUTPUT: CSV containing change in fitness of each condition as well as change in fitness.
+
+
+______________________________________________________________________
+
+(6/OPTIONAL) CALCULATE ALTERNATIVE FITNESS & COMPARE ALTERNATIVE FITNESS VALUES TO REGULAR FITNESS VALUES
+______________________________________________________________________
+
+INPUT: CSV from step 3, CSV from step 4, WT representative barcode, output name        
+	
+	python3 -W ignore step6.py <fixed_collapsed_fitness.csv> <name_repX.csv> 'WT_Barcode_Seq' <output_name>
+
+OUTPUT: 
+	(1) CSV with Alternative and Regular Fitness Values 
+
+	(2) 3 PDFs with scatterplot of alternative and regular fitness values for you to explore :)
+
+______________________________________________________________________
+
+
+
+
